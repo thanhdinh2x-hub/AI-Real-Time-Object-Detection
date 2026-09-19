@@ -200,6 +200,27 @@ The training process includes:
 - Bounding box regression optimization
 - Model checkpoint saving
 
+## Training Results
+
+### Loss Curve
+
+<p align="center">
+<img src="demo/training_loss.png" width="700"/>
+</p>
+
+
+### Mean Average Precision (mAP)
+
+<p align="center">
+<img src="demo/map_result.png" width="700"/>
+</p>
+
+
+### TensorBoard Monitoring
+
+<p align="center">
+<img src="demo/tensorboard_result.png" width="700"/>
+</p>
 
 # Image Detection
 
