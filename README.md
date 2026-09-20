@@ -17,7 +17,7 @@ This project implements a complete object detection pipeline, including:
 
 <p align="center">
 <img src="demo/horse_person_result.jpg" width="400"/>
-<img src="demo/dog_cat_result.jpg" width="400"/>
+<img src="demo/dog_cat_result1.jpg" width="400"/>
 </p>
 
 
