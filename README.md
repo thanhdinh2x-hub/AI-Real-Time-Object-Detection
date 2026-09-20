@@ -13,6 +13,10 @@ This project implements a complete object detection pipeline, including:
 
 ## Demo
 
+Video demo:
+
+[Watch demo]([link_video](https://drive.google.com/drive/folders/1quLN5huoisAiqWotRcZhOMEpIQm-ivt9?usp=sharing))
+
 ### Object Detection Results
 
 <p align="center">
