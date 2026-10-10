@@ -2,7 +2,9 @@ import numpy as np
 from torchvision.models.detection import fasterrcnn_resnet50_fpn
 from torchvision.models.detection.faster_rcnn import FasterRCNN_ResNet50_FPN_Weights,FastRCNNPredictor,FasterRCNN_MobileNet_V3_Large_FPN_Weights
 from torchvision.models.detection import fasterrcnn_mobilenet_v3_large_fpn
-from datasetVOC2007 import VOCdataset
+
+
+from dataset import VOCdataset
 from torch.utils.data import DataLoader
 import torch
 from torchvision.transforms import Compose, Resize, ToTensor, Normalize, RandomAffine, ColorJitter
@@ -13,6 +15,7 @@ import shutil # TODO : Nếu muốn xóa cả folder log cũ thay os.rmdir: cái
 import os
 from torchmetrics.detection import MeanAveragePrecision
 from pprint import pprint
+from pathlib import Path
 
 
 def collate_fn(batch):  # defined cách trả ra list của dataloader
@@ -37,7 +40,7 @@ def get_args():
     parser.add_argument('--batch_size','-b', help='batch size', default=3, type=int)
     parser.add_argument('--image_size','-ims', help='image size', default=416, type=int)
 
-    parser.add_argument('--logging','-l', help='logging tesorboard', default="tensorboard", type=str)
+    parser.add_argument('--logging','-l', help='logging tesorboard', default="../tensorboard", type=str)
     parser.add_argument('--checkpoint','-c', help='checkpoint is models saved params', default="../trained_models/last_model.pt", type=str)
     parser.add_argument('--save_path','-sp', help='save_path is path where models saved params', default="../trained_models", type=str)
 
@@ -65,9 +68,12 @@ def train(args):
             std=[0.229, 0.224, 0.225]),
     ])
 
-    train_set = VOCdataset(root=args.root, year="2007", image_set="trainval", download=False,
+    download=False
+    # download = not Path(args.root).is_dir() #trả về true or false
+    # print("download:",type(Path(args.root)), download)
+    train_set = VOCdataset(root=args.root, year="2007", image_set="trainval", download=download,
                            transform=train_transform)
-    val_set = VOCdataset(root=args.root, year="2007", image_set="val", download=False, transform=val_transform)
+    val_set = VOCdataset(root=args.root, year="2007", image_set="val", download=download, transform=val_transform)
 
     train_params = {
         "batch_size": args.batch_size,
@@ -113,11 +119,22 @@ def train(args):
     optimizer = torch.optim.SGD(model.parameters(), lr=1e-3,
                                 momentum=0.9)  # define optimizer . models.parameters() là muốn update toàn bộ parmeter
     # num_interation=len(train_loader) # training_loader chỉ là 1 list chứa các batch data thôi
-    # FIXME nếu tensorboard tồn tại thì xóa tensorboard cũ đi
+    # # FIXME nếu tensorboard tồn tại thì xóa tensorboard cũ đi
+    # if os.path.exists(args.logging):
+    #     shutil.rmtree(args.logging)
+    # os.makedirs(args.logging)
+    # FIXME Nếu TensorBoard tồn tại thì xóa log cũ, giữ thư mục gốc(cái này cho docker mount)
     if os.path.exists(args.logging):
-        shutil.rmtree(args.logging)
-    os.makedirs(args.logging)
-    # FIXME nếu trained_models ko tồn tại thì dic mới để lưu params của model về sau
+        for item in os.listdir(args.logging):
+            path = os.path.join(args.logging, item)
+
+            if os.path.isdir(path):
+                shutil.rmtree(path)
+            else:
+                os.remove(path)
+    else:
+        os.makedirs(args.logging)
+    # FIXME nếu trained_models ko tồn tại thì tạo dic mới để lưu params của model về sau
     if not os.path.isdir(args.save_path):
         os.mkdir(args.save_path)
     # FIXME khởi tạo thi viện để vẽ tensorboard

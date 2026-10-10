@@ -364,7 +364,200 @@ torchmetrics
 tensorboard
 ```
 
+# Docker Setup & Usage
 
+This project supports Docker for GPU-accelerated training with PyTorch and TensorBoard monitoring.
+
+The following instructions are intended for **Windows PowerShell with Docker Desktop (WSL2)**.
+
+## 1. Prerequisites
+
+Make sure you have:
+
+- Docker Desktop installed and running with Linux containers.
+- WSL2 configured.
+- An NVIDIA GPU with compatible drivers.
+- The Pascal VOC 2007 dataset available in the `datasets/` directory.
+
+Verify Docker:
+
+```powershell
+docker --version
+```
+
+Verify NVIDIA GPU support:
+
+```powershell
+nvidia-smi
+```
+
+Check GPU availability inside Docker:
+
+```powershell
+docker run --rm --gpus all pytorch/pytorch:2.5.0-cuda12.4-cudnn9-runtime python -c "import torch; print(torch.cuda.is_available())"
+```
+
+Expected output:
+
+```text
+True
+```
+
+## 2. Build Docker Image
+
+Open PowerShell in the project's root directory.
+
+Choose a Docker image name:
+
+```powershell
+$IMAGE_NAME = "my-object-detection"
+```
+
+Build the image:
+
+```powershell
+docker build -t $IMAGE_NAME .
+```
+
+Verify the image:
+
+```powershell
+docker images
+```
+
+**Note:** The image name can be customized. Rebuild the image after modifying source files copied by the Dockerfile.
+
+## 3. Run Docker Container
+
+### Option 1: Automatic Training
+
+Run the container using the default command defined in the Dockerfile:
+
+```powershell
+docker run --gpus all --rm `
+  -v "${PWD}/datasets:/workspace/datasets" `
+  -v "${PWD}/trained_models:/workspace/trained_models" `
+  -v "${PWD}/tensorboard:/workspace/tensorboard" `
+  $IMAGE_NAME
+```
+
+The container automatically executes:
+
+```bash
+python train.py
+```
+
+### Option 2: Interactive Mode
+
+Start an interactive container with GPU access, volume mounts, and TensorBoard port forwarding:
+
+```powershell
+docker run -it --gpus all --rm `
+  -p 6006:6006 `
+  -v "${PWD}/datasets:/workspace/datasets" `
+  -v "${PWD}/trained_models:/workspace/trained_models" `
+  -v "${PWD}/tensorboard:/workspace/tensorboard" `
+  $IMAGE_NAME bash
+```
+
+Start training manually inside the container:
+
+```bash
+python train.py
+```
+
+To exit the container:
+
+```bash
+exit
+```
+
+**Note:** Using `bash` overrides the default Dockerfile command.
+
+## 4. Docker Run Parameters
+
+| Parameter | Description |
+|---|---|
+| `-it` | Starts an interactive terminal |
+| `--gpus all` | Enables access to available NVIDIA GPUs |
+| `--rm` | Automatically removes the container when it exits |
+| `-v` | Mounts a host directory into the container |
+| `-p 6006:6006` | Maps host port 6006 to container port 6006 |
+| `$IMAGE_NAME` | Specifies the user-defined Docker image |
+| `bash` | Opens an interactive Bash shell |
+
+### Volume Mapping
+
+| Host Directory | Container Directory | Purpose |
+|---|---|---|
+| `datasets/` | `/workspace/datasets` | Training datasets |
+| `trained_models/` | `/workspace/trained_models` | Model checkpoints |
+| `tensorboard/` | `/workspace/tensorboard` | TensorBoard event logs |
+
+Bind mounts preserve training data, model checkpoints, and logs on the host machine even after the container is removed.
+
+**Warning:** Deleting files inside a bind-mounted directory also deletes the corresponding host files.
+
+## 5. Quick Start
+
+### Step 1: Set Image Name
+
+```powershell
+$IMAGE_NAME = "my-object-detection"
+```
+
+### Step 2: Build Image
+
+```powershell
+docker build -t $IMAGE_NAME .
+```
+
+### Step 3: Run Container
+
+```powershell
+docker run -it --gpus all --rm `
+  -p 6006:6006 `
+  -v "${PWD}/datasets:/workspace/datasets" `
+  -v "${PWD}/trained_models:/workspace/trained_models" `
+  -v "${PWD}/tensorboard:/workspace/tensorboard" `
+  $IMAGE_NAME bash
+```
+
+### Step 4: Start Training
+
+Inside the container:
+
+```bash
+python train.py
+```
+
+### Step 5: Monitor Training with TensorBoard
+
+Open a second PowerShell terminal and list running containers:
+
+```powershell
+docker ps
+```
+
+Connect to the running container:
+
+```powershell
+docker exec -it <CONTAINER_ID> bash
+```
+
+Replace `<CONTAINER_ID>` with the actual container ID.
+
+Start TensorBoard inside the container:
+
+```bash
+tensorboard --logdir=/workspace/tensorboard --host 0.0.0.0 --port 6006
+```
+
+Open TensorBoard in your browser:
+
+**http://127.0.0.1:6006/#scalars**
+
+Training metrics, including `Loss/train`, can be viewed when TensorBoard logs are available.
 # Future Improvements
 
 Possible improvements:

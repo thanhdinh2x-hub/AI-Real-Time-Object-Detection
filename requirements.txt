@@ -1,8 +1,10 @@
-torch
-torchvision
-opencv-python
-numpy
-tqdm
-torchmetrics
-tensorboard
-pillow
+numpy==2.0.1
+opencv-python==5.0.0.93
+pprintpp==0.4.0
+torch==2.5.1
+torchvision==0.20.1
+torchmetrics==1.9.0
+tqdm==4.70.1
+tensorboard==2.21.0
+
+--extra-index-url https://download.pytorch.org/whl/cu124
